@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DHL Smart Leave &amp; Check-in System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --dhl-yellow: #FFCC00;
+            --dhl-yellow-deep: #E6B800;
+            --dhl-red: #D40511;
+            --dhl-dark: #1a202c;
+            --dhl-grey: #718096;
+            --white: #ffffff;
+            --success: #38a169;
+            --danger: #e53e3e;
+            --warning: #dd6b20;
+            --light-gray: #f7fafc;
+            --border-gray: #edf2f7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Kanit', 'Poppins', sans-serif;
+            background-color: #f4f7f6;
+            color: var(--dhl-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
+        }
+
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        header {
+            background-color: var(--white);
+            border-bottom: 4px solid var(--dhl-yellow);
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .logo-group { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .dhl-brand-block {
+            background-color: var(--dhl-yellow);
+            color: var(--dhl-red);
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 900;
+            padding: 1px 10px;
+            border-radius: 4px;
+            letter-spacing: -1px;
+        }
+        .title-text-group { display: flex; flex-direction: column; border-left: 2px solid #e2e8f0; padding-left: 10px; }
+        .main-title-long { font-size: 13px; font-weight: 700; color: var(--dhl-dark); line-height: 1.2; }
+        .sub-title-long { font-size: 10px; color: var(--dhl-grey); margin-top: 1px; }
+
+        /* ===== BOTTOM TAB BAR (replaces old top mode switcher) ===== */
+        .bottom-tab-bar {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+            background: var(--white);
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+            padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
+        }
+        .bottom-tab-inner { display: flex; justify-content: space-around; align-items: stretch; max-width: 600px; margin: 0 auto; gap: 4px; }
+        .tab-btn {
+            flex: 1; background: none; border: none; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 3px; padding: 6px 4px; border-radius: 10px; font-family: inherit;
+            color: var(--dhl-grey); transition: all 0.15s ease; min-height: 52px;
+        }
+        .tab-btn i { font-size: 17px; }
+        .tab-btn span { font-size: 10.5px; font-weight: 600; }
+        .tab-btn.active { color: var(--dhl-red); background: #fff1f1; }
+
+        .main-content { flex: 1; width: 100%; padding-bottom: 92px; }
+        .app-container { width: 100%; max-width: 600px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
+
+        .rules-card { background: var(--white); border-radius: 8px; padding: 12px; border-top: 4px solid var(--dhl-red); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .rules-card h4 { font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-weight: 700; }
+        .rules-grid { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+        .rules-grid li { font-size: 11px; color: #4a5568; background: var(--light-gray); padding: 8px; border-radius: 6px; border-left: 3px solid #cbd5e1; }
+
+        .calendar-section { background: var(--white); border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); width: 100%; overflow: hidden; }
+        .month-selector-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--light-gray); padding: 8px; border-radius: 6px; }
+        .month-selector-bar select { padding: 6px 12px; font-family: inherit; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; outline: none; }
+        .year-label { font-size: 12px; font-weight: 700; color: var(--dhl-red); }
+
+        .legend-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; margin-bottom: 12px; font-size: 11px; background: #fffdf5; padding: 10px 12px; border-radius: 8px; border: 1px solid #fef3c7; }
+        .legend-box { display: flex; align-items: center; gap: 7px; color: #57534e; font-weight: 500; }
+        .color-indicator { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid #e2e8f0; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; width: 100%; overflow: hidden; }
+        .day-name { text-align: center; font-weight: 600; padding: 4px 0; color: var(--dhl-grey); font-size: 10px; }
+
+        .day-cell {
+            background-color: var(--white); border: 1px solid var(--border-gray); border-radius: 5px;
+            aspect-ratio: 1 / 1; padding: 1px; display: flex; flex-direction: column;
+            justify-content: space-between; align-items: center; cursor: pointer; position: relative;
+            min-width: 0; overflow: hidden;
+        }
+        .day-num { font-weight: 700; font-size: 11px; margin-top: 3px; line-height: 1; }
+        .day-cell.empty-day { background-color: #f8fafc; border: none; cursor: not-allowed; }
+        .day-cell.lock-day { background-color: #fff5f5; border-color: #fed7d7; }
+        .day-cell.promo-day { background-color: #fffbeb; border-color: #fde68a; }
+        .day-cell.holiday-day { background-color: #fffdf0; border-color: var(--dhl-yellow); }
+        .day-cell.booked-day { background-color: #e2e8f0; border-color: #cbd5e1; cursor: not-allowed; }
+        .day-cell.selected-day { border: 2px solid var(--dhl-dark) !important; background-color: #fffdec; }
+
+        .cell-badge {
+            font-size: 7px; padding: 1px 1px; border-radius: 2px; font-weight: 600; text-align: center;
+            width: 96%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; line-height: 1.3;
+        }
+        .bg-lock { background: #fee2e2; color: #ef4444; }
+        .bg-promo { background: #fef3c7; color: #b45309; }
+        .bg-holiday { background: var(--dhl-yellow); color: var(--dhl-dark); }
+        .bg-booked { background: #cbd5e1; color: #475569; }
+        .bg-booked-id { background: #94a3b8; color: #fff; }
+
+        .detail-info-box { margin-top: 10px; padding: 8px 12px; background-color: #f1f5f9; border-radius: 6px; font-size: 11px; color: #334155; display: none; border-left: 4px solid var(--dhl-grey); }
+
+        .form-section { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .section-title-form { font-size: 14px; font-weight: 700; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--light-gray); display: flex; align-items: center; gap: 6px; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+        .form-input { width: 100%; padding: 10px 10px; border: 1px solid #cbd5e1; border-radius: 5px; font-family: inherit; font-size: 16px; outline: none; }
+
+        .chips-container { background: var(--light-gray); border: 1px dashed #cbd5e1; border-radius: 5px; padding: 6px; min-height: 40px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .chip { background: #fff; border: 1px solid var(--dhl-yellow); padding: 1px 6px; border-radius: 12px; font-size: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+        .chip i { color: var(--danger); cursor: pointer; }
+
+        .submit-btn { width: 100%; background: var(--dhl-red); color: #fff; border: none; padding: 14px; border-radius: 5px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 46px; }
+        .submit-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .ghost-btn { width: 100%; background: var(--white); color: var(--dhl-dark); border: 2px solid var(--dhl-yellow); padding: 12px; border-radius: 5px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 46px; }
+        .ghost-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ===== CHECK-IN MODULE ===== */
+        .checkin-hero { background: linear-gradient(160deg, #1a202c 0%, #2d3748 100%); border-radius: 12px; padding: 18px 16px; text-align: center; box-shadow: 0 4px 14px rgba(26,32,44,0.25); border-bottom: 3px solid var(--dhl-yellow); }
+        /* Every digit and separator shares the same font-size/weight/variant so the clock never
+           reads as "big time + small seconds" -- all six digits are visually equal. */
+        .checkin-clock {
+            font-family: 'Poppins', sans-serif; font-size: 32px; font-weight: 700;
+            color: var(--white); letter-spacing: 2px;
+            font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+        }
+        .checkin-date-label { font-size: 11.5px; color: var(--dhl-yellow); font-weight: 600; margin-top: 4px; }
+
+        .step-box { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .step-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .step-num-badge { background: var(--dhl-yellow); color: var(--dhl-dark); width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+
+        .courier-id-input-row { display: flex; gap: 8px; }
+        .courier-id-input-row .form-input { text-transform: uppercase; }
+        .btn-secondary-yellow { background: var(--dhl-yellow); color: var(--dhl-dark); border: none; padding: 8px 14px; border-radius: 5px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; min-height: 44px; }
+
+        .courier-profile-card { display: none; margin-top: 10px; background: var(--light-gray); border-radius: 8px; padding: 10px 12px; border-left: 4px solid var(--success); }
+        .courier-profile-card.show { display: flex; align-items: center; gap: 10px; }
+        .courier-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--dhl-yellow); color: var(--dhl-dark); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+        .courier-profile-body { flex: 1; min-width: 0; }
+        .courier-profile-name { font-size: 13px; font-weight: 700; }
+        .courier-profile-vendor { font-size: 11px; color: var(--dhl-grey); }
+        .loc-badge {
+            flex-shrink: 0; font-size: 10.5px; font-weight: 700; padding: 4px 9px;
+            border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;
+            white-space: nowrap;
+        }
+        .loc-badge.pending { background: #e2e8f0; color: #475569; }
+        .loc-badge.ok { background: #d1fae5; color: #065f46; }
+        .loc-badge.fail { background: #fee2e2; color: #991b1b; }
+
+        .location-status-box { margin-top: 8px; padding: 8px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; display: none; align-items: center; gap: 8px; }
+        .location-status-box.show { display: flex; }
+        .location-status-box.pending { background: #f1f5f9; color: #475569; }
+        .location-status-box.ok { background: #ecfdf5; color: #065f46; }
+        .location-status-box.fail { background: #fef2f2; color: #991b1b; }
+
+        /* Pre-checkin checklist (uniform / KTB bag) */
+        .checklist-box { margin-top: 12px; background: var(--light-gray); border-radius: 6px; padding: 10px; border: 1px dashed #cbd5e1; }
+        .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; padding: 6px 2px; cursor: pointer; }
+        .checklist-item input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--dhl-red); }
+        .checklist-note { font-size: 10.5px; color: var(--dhl-grey); font-weight: 400; margin-top: 2px; }
+
+        /* KTB bag has/doesn't-have toggle */
+        .ktb-toggle-row { padding: 6px 2px; }
+        .ktb-toggle-label { font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block; }
+        .ktb-toggle-group { display: flex; gap: 8px; }
+        .ktb-toggle-btn {
+            flex: 1; padding: 9px 6px; border-radius: 6px; font-family: inherit;
+            font-size: 12px; font-weight: 700; cursor: pointer; border: 2px solid #cbd5e1;
+            background: #fff; color: #4a5568; display: flex; align-items: center; justify-content: center; gap: 6px;
+            min-height: 40px; transition: all 0.15s ease;
+        }
+        .ktb-toggle-btn.has-selected { border-color: var(--success); background: #d1fae5; color: #065f46; }
+        .ktb-toggle-btn.none-selected { border-color: var(--warning); background: #ffedd5; color: #9a3412; }
+
+        .camera-wrap { display: none; margin-top: 10px; }
+        .camera-wrap.show { display: block; }
+        .camera-frame { position: relative; width: 100%; max-width: 320px; margin: 0 auto; border-radius: 10px; overflow: hidden; background: #000; aspect-ratio: 4/3; border: 3px solid var(--dhl-yellow); }
+        .camera-frame video, .camera-frame canvas, .camera-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .camera-frame canvas { display: none; }
+        .camera-btn-row { display: flex; gap: 8px; margin-top: 10px; max-width: 320px; margin-left: auto; margin-right: auto; }
+
+        /* Receipt / ticket style check-in confirmation, echoing the printed-slip feel of a
+           courier docket: dark card, perforated divider, tabular time. */
+        .success-checkin-box {
+            display: none; text-align: center; padding: 0; overflow: hidden;
+            background: linear-gradient(160deg, #1a202c 0%, #262f40 100%); border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(26,32,44,0.2);
+        }
+        .success-checkin-box.show { display: block; }
+        .receipt-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 0; }
+        .receipt-eyebrow { font-size: 10px; letter-spacing: 1px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+        .success-checkin-title { font-size: 14px; font-weight: 700; color: var(--white); margin-top: 4px; }
+        .success-checkin-time { font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700; color: var(--white); margin: 10px 0 2px; font-variant-numeric: tabular-nums; }
+        .late-tag { display: inline-block; background: #ffedd5; color: var(--warning); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; margin: 4px 0 14px; }
+        .ontime-tag { display: inline-block; background: #d1fae5; color: var(--success); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; margin: 4px 0 14px; }
+        .receipt-divider {
+            position: relative; height: 1px; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.18) 0 6px, transparent 6px 12px);
+            margin: 0 16px;
+        }
+        .success-checklist-summary { padding: 12px 16px; display: flex; justify-content: center; gap: 18px; font-size: 11px; flex-wrap: wrap; color: #cbd5e1; }
+        .success-checklist-summary span { display: flex; align-items: center; gap: 5px; font-weight: 600; }
+        .success-checklist-summary span.missing-tag { color: #fdba74; }
+        .success-checkin-box .ghost-btn { margin: 0 16px 16px; width: calc(100% - 32px); background: rgba(255,255,255,0.06); border-color: var(--dhl-yellow); color: var(--white); }
+
+        /* ===== ADMIN PANEL ===== */
+        .admin-panel { background: transparent; display: none; flex-direction: column; gap: 12px; }
+        .admin-tab-switcher { display: flex; gap: 6px; background: var(--white); padding: 6px; border-radius: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .admin-tab-btn { flex: 1; background: transparent; border: none; padding: 10px 6px; border-radius: 20px; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; color: #4a5568; min-height: 40px; transition: all 0.15s ease; }
+        .admin-tab-btn.active { background: var(--dhl-dark); color: var(--white); }
+
+        .admin-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .admin-stat-card { background: var(--white); border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .admin-stat-label { font-size: 11px; color: var(--dhl-grey); font-weight: 600; }
+        .admin-stat-value { font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700; color: var(--dhl-dark); margin-top: 2px; }
+        .admin-stat-card.pending .admin-stat-value { color: var(--warning); }
+        .admin-stat-card.approved .admin-stat-value { color: var(--success); }
+
+        .admin-card { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: none; }
+        .admin-card.show { display: block; }
+
+        /* Card-list rows (mobile-first, replaces the old dense table on small screens) */
+        .record-list { display: flex; flex-direction: column; gap: 10px; }
+        .leave-card, .attendance-card {
+            background: var(--light-gray); border-radius: 10px; padding: 12px 14px;
+            border-left: 4px solid #cbd5e1;
+        }
+        .leave-card.st-pending { border-left-color: var(--warning); }
+        .leave-card.st-approved { border-left-color: var(--success); }
+        .leave-card.st-rejected { border-left-color: var(--danger); }
+        .leave-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .leave-card-id { font-size: 11px; color: var(--dhl-grey); font-weight: 700; letter-spacing: 0.3px; }
+        .leave-card-name { font-size: 14px; font-weight: 700; margin-top: 1px; }
+        .leave-card-meta { font-size: 11.5px; color: #4a5568; margin-top: 4px; }
+        .leave-card-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .leave-card-actions .btn-approve, .leave-card-actions .btn-reject { flex: 1; text-align: center; padding: 8px 6px; }
+
+        .attendance-card { display: flex; align-items: center; gap: 10px; border-left-color: var(--success); }
+        .attendance-card.late { border-left-color: var(--warning); }
+        .attendance-card-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--dhl-yellow); color: var(--dhl-dark); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+        .attendance-card-body { flex: 1; min-width: 0; }
+        .attendance-card-name { font-size: 13px; font-weight: 700; }
+        .attendance-card-meta { font-size: 11px; color: var(--dhl-grey); margin-top: 1px; }
+        .attendance-card-meta b { color: #4a5568; }
+        .attendance-card-tags { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+        .empty-state-note { text-align: center; color: var(--dhl-grey); padding: 20px; font-size: 12px; }
+
+        .search-container { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .search-container .form-input { flex: 1; min-width: 120px; }
+        .toggle-history-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dhl-grey); margin-bottom: 10px; }
+        .btn-dark-sm { background: var(--dhl-dark); color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; min-height: 40px; }
+        .btn-export { background: var(--success); color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; min-height: 40px; }
+        .btn-clear-all { background: var(--white); color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 5px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; min-height: 40px; }
+
+        .admin-table-wrapper { overflow-x: auto; width: 100%; border-radius: 6px; border: 1px solid var(--border-gray); -webkit-overflow-scrolling: touch; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 580px; }
+        .admin-table th { background: var(--light-gray); padding: 10px 8px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; white-space: nowrap; }
+        .admin-table td { padding: 8px 8px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+
+        .btn-approve {
+            background: var(--success); color: #fff; border: none;
+            padding: 6px 10px; border-radius: 4px; font-size: 11px;
+            font-family: inherit; font-weight: 600; cursor: pointer;
+            margin-right: 4px; white-space: nowrap;
+        }
+        .btn-reject {
+            background: var(--danger); color: #fff; border: none;
+            padding: 6px 10px; border-radius: 4px; font-size: 11px;
+            font-family: inherit; font-weight: 600; cursor: pointer;
+            white-space: nowrap; margin-right: 4px;
+        }
+        .btn-delete-sm {
+            background: var(--white); color: var(--danger); border: 1px solid var(--danger);
+            padding: 6px 8px; border-radius: 4px; font-size: 11px;
+            font-family: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;
+        }
+        .btn-delete-sm:disabled, .btn-approve:disabled, .btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-approve:active, .btn-reject:active, .btn-delete-sm:active { opacity: 0.75; }
+        .done-label { font-size: 11px; color: var(--dhl-grey); }
+
+        .reason-cell {
+            font-size: 11px; color: #4a5568; max-width: 120px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .status-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 11px; font-weight: 700;
+        }
+        .status-pending { background: #fef3c7; color: #b45309; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+        .status-ontime { background: #d1fae5; color: #065f46; }
+        .status-late { background: #ffedd5; color: #9a3412; }
+        .status-ok-mini { background: #d1fae5; color: #065f46; font-size: 10px; padding: 2px 6px; }
+        .status-fail-mini { background: #fee2e2; color: #991b1b; font-size: 10px; padding: 2px 6px; }
+        .status-warn-mini { background: #ffedd5; color: #9a3412; font-size: 10px; padding: 2px 6px; }
+
+        /* MODALS */
+        .pin-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.6);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 5000; padding: 20px; visibility: hidden; opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .pin-modal-overlay.show { visibility: visible; opacity: 1; }
+        .pin-card {
+            background-color: var(--white); width: 100%; max-width: 320px;
+            padding: 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center; border-top: 5px solid var(--dhl-red);
+        }
+        .pin-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--dhl-dark); }
+        .pin-input { width: 90%; padding: 10px; font-size: 16px; text-align: center; border: 2px solid #cbd5e1; border-radius: 5px; margin-bottom: 15px; outline: none; }
+        .pin-btn-group { display: flex; gap: 8px; }
+        .pin-btn { flex: 1; padding: 10px; font-family: inherit; font-size: 12px; font-weight: 600; border-radius: 4px; border: none; cursor: pointer; min-height: 44px; }
+        .pin-btn-cancel { background: #e2e8f0; color: #475569; }
+        .pin-btn-confirm { background: var(--dhl-dark); color: var(--white); }
+
+        .warn-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.55);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 4500; padding: 20px; visibility: hidden; opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .warn-modal-overlay.show { visibility: visible; opacity: 1; }
+        .warn-card {
+            background-color: var(--white); width: 100%; max-width: 340px;
+            border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            overflow: hidden; border-top: 5px solid var(--warning);
+        }
+        .warn-header { background: #fffbeb; padding: 14px 16px 10px; border-bottom: 1px solid #fde68a; }
+        .warn-header-title { font-size: 14px; font-weight: 700; color: #92400e; display: flex; align-items: center; gap: 8px; }
+        .warn-body { padding: 14px 16px; font-size: 12px; color: #4a5568; line-height: 1.7; }
+        .warn-highlight { background: #fef3c7; border-left: 3px solid var(--warning); padding: 8px 10px; border-radius: 4px; margin-bottom: 10px; font-size: 11px; color: #92400e; font-weight: 600; }
+        .warn-btn-group { display: flex; gap: 8px; padding: 0 16px 16px; }
+        .warn-btn { flex: 1; padding: 12px; font-family: inherit; font-size: 12px; font-weight: 700; border-radius: 5px; border: none; cursor: pointer; min-height: 44px; }
+        .warn-btn-cancel { background: #e2e8f0; color: #475569; }
+        .warn-btn-confirm { background: var(--warning); color: var(--white); }
+
+        .toast-box { position: fixed; bottom: 20px; right: 15px; left: 15px; background: #fff; padding: 10px 15px; border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; z-index: 4000; transform: translateY(150%); transition: transform 0.2s ease; border-left: 4px solid var(--danger); font-size: 12px; max-width: 570px; margin: 0 auto; }
+        .toast-box.show { transform: translateY(0); }
+        .toast-box.success { border-left-color: var(--success); }
+        .toast-box.warning { border-left-color: var(--warning); }
+
+        @media (max-width: 380px) {
+            .main-title-long { font-size: 12px; }
+            .sub-title-long { font-size: 9px; }
+            .tab-btn span { font-size: 9.5px; }
+            .checkin-clock { font-size: 27px; letter-spacing: 1px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sticky-top">
+        <header>
+            <div class="logo-group">
+                <div class="dhl-brand-block">DHL</div>
+                <div class="title-text-group">
+                    <div class="main-title-long" id="headerTitleText">ระบบลางาน &amp; เช็คอินเข้างาน (Smart Leave &amp; Check-in)</div>
+                    <div class="sub-title-long">Operational Resource Planning Portal</div>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <nav class="bottom-tab-bar">
+        <div class="bottom-tab-inner">
+            <button class="tab-btn active" id="btnCheckinMode" onclick="switchMode('checkin')">
+                <i class="fa-solid fa-clock"></i><span>เช็คอิน</span>
+            </button>
+            <button class="tab-btn" id="btnUserMode" onclick="switchMode('user')">
+                <i class="fa-regular fa-calendar"></i><span>ลางาน</span>
+            </button>
+            <button class="tab-btn" id="btnAdminMode" onclick="tryAccessAdmin()">
+                <i class="fa-solid fa-shield-halved"></i><span>ผู้ดูแล</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="app-container">
+
+            <!-- ============ CHECK-IN MODULE ============ -->
+            <div id="checkinModuleSection" style="display:flex; flex-direction:column; gap:12px;">
+                <div class="checkin-hero">
+                    <div class="checkin-clock" id="liveClock">--:--:--</div>
+                    <div class="checkin-date-label" id="liveDateLabel">-</div>
+                </div>
+
+                <div class="step-box">
+                    <div class="step-title"><span class="step-num-badge">1</span> กรอก Courier ID</div>
+                    <div class="courier-id-input-row">
+                        <input type="text" id="checkinCourierId" class="form-input" placeholder="เช่น: BPET05" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCourierId();}">
+                        <button type="button" class="btn-secondary-yellow" onclick="lookupCourierId()">ตรวจสอบ</button>
+                    </div>
+                    <div class="courier-profile-card" id="courierProfileCard">
+                        <div class="courier-avatar" id="courierAvatarInit">?</div>
+                        <div class="courier-profile-body">
+                            <div class="courier-profile-name" id="courierProfileName">-</div>
+                            <div class="courier-profile-vendor" id="courierProfileVendor">-</div>
+                        </div>
+                        <span class="loc-badge pending" id="locBadge" style="display:none;">
+                            <i class="fa-solid fa-location-crosshairs"></i> <span id="locBadgeText">กำลังตรวจสอบ</span>
+                        </span>
+                    </div>
+                    <div class="location-status-box" id="locationStatusBox">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                        <span id="locationStatusText">กำลังตรวจสอบตำแหน่งที่ตั้ง...</span>
+                    </div>
+                </div>
+
+                <div class="step-box" id="cameraStepBox" style="display:none;">
+                    <div class="step-title"><span class="step-num-badge">2</span> ตรวจสอบความพร้อมก่อนเช็คอิน</div>
+
+                    <!-- Pre-checkin checklist: uniform + KTB bag -->
+                    <div class="checklist-box" id="checklistBox">
+                        <label class="checklist-item">
+                            <input type="checkbox" id="chkUniform" onchange="updateChecklistState()">
+                            แต่งกายถูกต้องตามยูนิฟอร์มบริษัท (ยูนิฟอร์ม)
+                        </label>
+
+                        <div class="ktb-toggle-row">
+                            <span class="ktb-toggle-label">กระเป๋า KTB</span>
+                            <div class="ktb-toggle-group">
+                                <button type="button" class="ktb-toggle-btn" id="btnKtbHas" onclick="selectKtbBag(true)">
+                                    <i class="fa-solid fa-bag-shopping"></i> มี
+                                </button>
+                                <button type="button" class="ktb-toggle-btn" id="btnKtbNone" onclick="selectKtbBag(false)">
+                                    <i class="fa-solid fa-ban"></i> ไม่มี
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="checklist-note">* ต้องติ๊กยูนิฟอร์ม และเลือกสถานะกระเป๋า KTB (มี/ไม่มี) ก่อน จึงจะสามารถถ่ายภาพเพื่อเช็คอินได้</div>
+                    </div>
+
+                    <div class="step-title" style="margin-top:14px;"><span class="step-num-badge">3</span> สแกนใบหน้ายืนยันตัวตนเพื่อเช็คอิน</div>
+                    <div class="camera-wrap" id="cameraWrap">
+                        <div class="camera-frame">
+                            <video id="cameraVideo" autoplay playsinline muted></video>
+                            <canvas id="cameraCanvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="camera-btn-row">
+                        <button type="button" class="ghost-btn" id="openCameraBtn" onclick="openCamera()">เปิดกล้อง</button>
+                        <button type="button" class="submit-btn" id="captureBtn" style="display:none;" onclick="captureAndCheckin()" disabled>ถ่ายภาพและเช็คอิน</button>
+                    </div>
+                </div>
+
+                <div class="success-checkin-box" id="successCheckinBox">
+                    <div class="receipt-head">
+                        <span class="receipt-eyebrow">Check-in Receipt</span>
+                        <span id="successCheckinTag"></span>
+                    </div>
+                    <div class="success-checkin-title" id="successCheckinName">เช็คอินสำเร็จ</div>
+                    <div class="success-checkin-time" id="successCheckinTime">07:00:00</div>
+                    <div class="receipt-divider"></div>
+                    <div class="success-checklist-summary" id="successChecklistSummary"></div>
+                    <button type="button" class="ghost-btn" onclick="resetCheckinFlow()">เช็คอินรายการถัดไป</button>
+                </div>
+            </div>
+
+            <!-- ============ LEAVE MODULE ============ -->
+            <div id="leaveModuleSection" style="display:none;">
+                <div class="rules-card" id="rulesCard">
+                    <h4><i class="fa-solid fa-triangle-exclamation" style="color: var(--dhl-red)"></i> กฎเหล็กการลางาน</h4>
+                    <ul class="rules-grid">
+                        <li><b>อังคาร - พฤหัสบดี ต้องได้รับอนุมัติ:</b> ช่วงกลางสัปดาห์พัสดุหนาแน่น ต้องผ่านการอนุมัติจากหัวหน้างานเท่านั้น</li>
+                        <li><b>ช่วงโปรโมชั่น ต้องได้รับอนุมัติ:</b> แคมเปญดับเบิ้ลเดทประจำเดือน 7 วันทำการ (ไม่รวมวันอาทิตย์) ต้องผ่านหัวหน้างาน</li>
+                        <li><b>ห้ามลาซ้อนกัน:</b> ใน 1 วัน ปฏิทินอนุมัติสูงสุดเพียง <b>1 คน</b> เท่านั้น</li>
+                        <li><b>ข้อมูลหมดอายุอัตโนมัติ:</b> เมื่อพ้นวันที่ลาไปแล้ว รายการจะถูกซ่อนออกจากปฏิทินและคิวอนุมัติโดยอัตโนมัติ (ยังดึงเป็นรายงานย้อนหลังได้ที่หน้า Admin)</li>
+                    </ul>
+                </div>
+
+                <div class="calendar-section" id="calendarSection">
+                    <div class="month-selector-bar">
+                        <select id="monthSelect" onchange="renderCalendar()">
+                            <option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option>
+                            <option value="2">มีนาคม</option><option value="3">เมษายน</option>
+                            <option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option>
+                            <option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option>
+                            <option value="8">กันยายน</option><option value="9">ตุลาคม</option>
+                            <option value="10">พฤศจิกายน</option><option value="11">ธันวาคม</option>
+                        </select>
+                        <div class="year-label">ปีปฏิทิน 2026 (พ.ศ. 2569)</div>
+                    </div>
+                    <div class="legend-row">
+                        <div class="legend-box"><div class="color-indicator" style="background:#fff;"></div> ว่าง</div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#fff5f5;"></div> ต้องอนุมัติ (อ.-พฤ.)</div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#fffbeb;"></div> แคมเปญ (ต้องอนุมัติ)</div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#fffdf0; border-color:var(--dhl-yellow)"></div> วันหยุด</div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#e2e8f0;"></div> เต็มแล้ว</div>
+                    </div>
+                    <div class="calendar-grid" id="gridBox"></div>
+                    <div class="detail-info-box" id="detailInfoBox"></div>
+                </div>
+
+                <div class="form-section" id="formSection">
+                    <div class="section-title-form">
+                        <i class="fa-solid fa-file-lines" style="color: var(--dhl-red);"></i>
+                        <span>กรอกข้อมูลยื่นคำขอ</span>
+                    </div>
+                    <form id="requestForm" onsubmit="handleFormSubmit(event)">
+                        <div class="input-group">
+                            <label>ชื่อ-นามสกุลพนักงาน * (เฉพาะชื่อ ไม่เอานามสกุล)</label>
+                            <input type="text" id="inputName" class="form-input" placeholder="เช่น: สมชาย" required>
+                        </div>
+                        <div class="input-group">
+                            <label>รหัสพนักงาน *</label>
+                            <input type="text" id="inputId" class="form-input" placeholder="เช่น: DHL-1043" required>
+                        </div>
+                        <div class="input-group">
+                            <label>วันที่คุณเลือกขอลางาน:</label>
+                            <div class="chips-container" id="chipsBox">
+                                <span style="color:var(--dhl-grey); font-size:11px;">กรุณาคลิกเลือกวันที่ว่างบนปฏิทิน...</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>เหตุผลความจำเป็นล่วงหน้า *</label>
+                            <textarea id="inputReason" class="form-input" rows="2" style="resize:none;" placeholder="ระบุเหตุผลความจำเป็น..." required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">ส่งข้อมูลเข้าฐานระบบ</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ============ ADMIN PANEL ============ -->
+            <div class="admin-panel" id="adminSection">
+
+                <div class="admin-stat-row">
+                    <div class="admin-stat-card pending">
+                        <div class="admin-stat-label">รออนุมัติ</div>
+                        <div class="admin-stat-value" id="statPendingCount">0</div>
+                    </div>
+                    <div class="admin-stat-card approved">
+                        <div class="admin-stat-label">อนุมัติวันนี้</div>
+                        <div class="admin-stat-value" id="statApprovedTodayCount">0</div>
+                    </div>
+                </div>
+
+                <div class="admin-tab-switcher">
+                    <button class="admin-tab-btn active" id="tabBtnLeave" onclick="switchAdminTab('leave')">คำขอลา</button>
+                    <button class="admin-tab-btn" id="tabBtnAttendance" onclick="switchAdminTab('attendance')">เข้างาน</button>
+                </div>
+
+                <!-- LEAVE ADMIN TAB -->
+                <div class="admin-card show" id="adminCardLeave">
+                    <div class="section-title-form">
+                        <i class="fa-solid fa-user-gear" style="color: var(--success);"></i>
+                        <span>ตรวจสอบสถานะและอนุมัติ/ปฏิเสธคำขอลา</span>
+                    </div>
+
+                    <div class="search-container">
+                        <input type="text" id="searchEmpId" class="form-input" placeholder="พิมพ์รหัสพนักงานเพื่อค้นหา..." oninput="renderAdminDashboard()">
+                        <button class="btn-dark-sm" onclick="refreshAdminData()"><i class="fa-solid fa-rotate-right"></i> รีเฟรช</button>
+                        <button class="btn-export" onclick="exportLeaveCsv()"><i class="fa-solid fa-file-arrow-down"></i> ดึงรายงาน CSV</button>
+                        <button class="btn-clear-all" onclick="clearAllLeaveRecords()"><i class="fa-solid fa-broom"></i> ล้างข้อมูลทั้งหมด</button>
+                    </div>
+                    <div class="toggle-history-row">
+                        <input type="checkbox" id="showHistoryLeave" onchange="renderAdminDashboard()">
+                        <label for="showHistoryLeave">แสดงรายการที่พ้นวันลาไปแล้วด้วย (ค่าเริ่มต้นจะซ่อนอัตโนมัติ)</label>
+                    </div>
+
+                    <div class="record-list" id="adminTableBody"></div>
+                </div>
+
+                <!-- ATTENDANCE ADMIN TAB -->
+                <div class="admin-card" id="adminCardAttendance">
+                    <div class="section-title-form">
+                        <i class="fa-solid fa-clock" style="color: var(--dhl-red);"></i>
+                        <span>รายงานเวลาเข้างาน (Check-in)</span>
+                    </div>
+
+                    <div class="search-container">
+                        <input type="text" id="searchCourierId" class="form-input" placeholder="พิมพ์ Courier ID เพื่อค้นหา..." oninput="renderAttendanceDashboard()">
+                        <input type="date" id="filterDate" class="form-input" style="flex:0 0 140px;" onchange="renderAttendanceDashboard()">
+                        <button class="btn-dark-sm" onclick="refreshAttendanceData()"><i class="fa-solid fa-rotate-right"></i> รีเฟรช</button>
+                        <button class="btn-export" onclick="exportAttendanceCsv()"><i class="fa-solid fa-file-arrow-down"></i> ดึงรายงาน CSV</button>
+                        <button class="btn-clear-all" onclick="clearAllAttendanceRecords()"><i class="fa-solid fa-broom"></i> ล้างข้อมูลทั้งหมด</button>
+                    </div>
+
+                    <div class="record-list" id="attendanceTableBody"></div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PIN MODAL -->
+    <div class="pin-modal-overlay" id="pinModal">
+        <div class="pin-card">
+            <div class="pin-title"><i class="fa-solid fa-lock" style="color:var(--dhl-red)"></i> กรุณาใส่รหัสผ่านผู้ดูแลระบบ</div>
+            <input type="password" id="pinCodeField" class="pin-input" placeholder="พิมพ์รหัสผ่านที่นี่">
+            <div class="pin-btn-group">
+                <button class="pin-btn pin-btn-cancel" onclick="closePinModal()">ยกเลิก</button>
+                <button class="pin-btn pin-btn-confirm" onclick="verifyAdminPin()">ยืนยันรหัส</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WARN MODAL -->
+    <div class="warn-modal-overlay" id="warnModal">
+        <div class="warn-card">
+            <div class="warn-header">
+                <div class="warn-header-title">
+                    <i class="fa-solid fa-shield-exclamation"></i>
+                    <span id="warnModalTitle">กฎเหล็กคลังสินค้า DHL</span>
+                </div>
+            </div>
+            <div class="warn-body">
+                <div class="warn-highlight" id="warnHighlight"></div>
+                <div id="warnDetail"></div>
+            </div>
+            <div class="warn-btn-group">
+                <button class="warn-btn warn-btn-cancel" onclick="closeWarnModal(false)">ยกเลิก ไม่ยื่นคำขอ</button>
+                <button class="warn-btn warn-btn-confirm" onclick="closeWarnModal(true)">
+                    <i class="fa-solid fa-paper-plane"></i> ยืนยันยื่นคำขอ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-box" id="toastBar">
+        <i id="toastIcon" class="fa-solid"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // ===================== CONFIG =====================
+        const SB_URL = "https://kubkriophojmqlnnoins.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1YmtyaW9waG9qbXFsbm5vaW5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMjI2OTUsImV4cCI6MjA5Mzc5ODY5NX0.kkbFrRjHsUVHIivzZtNlPFY5C225PxxlAkdQTKfVus4";
+        const SB_HEADERS = {
+            "Content-Type": "application/json",
+            "apikey": SB_KEY,
+            "Authorization": "Bearer " + SB_KEY
+        };
+
+        // Fixed check-in geo point (not shown to users) & radius
+        const CHECKIN_LAT = 13.615251;
+        const CHECKIN_LNG = 100.744802;
+        const CHECKIN_RADIUS_M = 150;
+        const WORK_START_HOUR = 7;   // 7:00 AM
+        const WORK_START_MIN = 0;
+
+        // Courier ID roster (from company sheet)
+        const COURIER_LIST = [
+            {id:"BPED09", name:"Piyaphong Kamlangharn", vendor:"DHL"},
+            {id:"BPEQ01", name:"Chaloemphon Nokphet", vendor:"Choknumsub Transport"},
+            {id:"BPEQ03", name:"Chumnan Sanjuml", vendor:"Choknumsub Transport"},
+            {id:"BPEQ04", name:"Rames Tripathi", vendor:"Big Boom"},
+            {id:"BPEQ09", name:"Wiwat Butthijak", vendor:"Suriya Logistics"},
+            {id:"BPEQ11", name:"Wisanu Sangjam", vendor:"Big Boom"},
+            {id:"BPEQ12", name:"Boonruang Senarin", vendor:"Big Boom"},
+            {id:"BPET02", name:"Manooh Posuwan", vendor:"Napongpat Transport"},
+            {id:"BPET05", name:"Surachai Ainpleng", vendor:"Phongtharin"},
+            {id:"BPET08", name:"Chuchat Klaimeepan", vendor:"Phongtharin"},
+            {id:"BPET10", name:"Kittisak Kauwkaew", vendor:"Phongtharin"},
+            {id:"BPET13", name:"Santi Chocheevaranon", vendor:"Supreme Express"},
+            {id:"BPET14", name:"Teerasak Pinakano", vendor:"Supreme Express"},
+            {id:"BPET15", name:"Piyapak Saedan", vendor:"Supreme Express"},
+            {id:"BPET16", name:"Raphiphat Khamsuk", vendor:"Phongtharin"},
+            {id:"BPET17", name:"Oma Cherreef", vendor:"Supreme Express"},
+            {id:"BPET18", name:"Boonmee Kerdbua", vendor:"Supreme Express"},
+            {id:"BPET27", name:"Aekkarin Bangpong", vendor:"Phongtharin"},
+            {id:"BPET36", name:"Samnong Somboon", vendor:"Phongtharin"},
+            {id:"BPET37", name:"Prapansak Jampajoy", vendor:"Phongtharin"},
+            {id:"BPET45", name:"Chaloey Hmomuang", vendor:"Phongtharin"},
+            {id:"BPET60", name:"Narongsak Bamben", vendor:"Phongtharin"},
+            {id:"BPET63", name:"Aon Plikamin", vendor:"Phongtharin"},
+            {id:"BPET65", name:"Kiattinpoom Promppassorn", vendor:"Phongtharin"},
+            {id:"BPET70", name:"Kamchai Kokarat", vendor:"Phongtharin"},
+            {id:"BPET76", name:"San Khuamthong", vendor:"Phongtharin"},
+            {id:"BPET86", name:"Teerapon Cherdchu", vendor:"Big Boom"},
+            {id:"BPET98", name:"Manoch Sirithaen", vendor:"Supreme Express"},
+            {id:"BPEX01", name:"Thanakrit Srisathe", vendor:"DHL"}
+        ];
+
+        const ADMIN_PIN_SECRET = "Dhl@12345";
+        let warnResolve = null;
+        let onlineDatabaseRecords = [];
+        let attendanceRecords = [];
+        let selectedDates = [];
+
+        // Checkin flow state
+        let currentCourier = null;
+        let currentDistance = null;
+        let locationOk = false;
+        let cameraStream = null;
+        // KTB bag status: null = not yet answered, true = has bag, false = doesn't have bag
+        let currentKtbBagStatus = null;
+
+        const publicHolidays2026 = {
+            "2026-01-01": "วันขึ้นปีใหม่", "2026-03-03": "วันมาฆบูชา",
+            "2026-04-06": "วันจักรี", "2026-04-13": "วันสงกรานต์",
+            "2026-04-14": "วันสงกรานต์", "2026-04-15": "วันสงกรานต์",
+            "2026-05-01": "วันแรงงานแห่งชาติ", "2026-05-04": "วันฉัตรมงคล",
+            "2026-06-01": "วันชดเชย วันวิสาขบูชา / วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี",
+            "2026-07-28": "วันเฉลิมพระชนมพรรษา รัชกาลที่ 10", "2026-07-29": "วันอาสาฬหบูชา",
+            "2026-08-12": "วันแม่แห่งชาติ", "2026-10-13": "วันคล้ายวันสวรรคต รัชกาลที่ 9",
+            "2026-10-23": "วันปิยมหาราช", "2026-12-05": "วันพ่อแห่งชาติ",
+            "2026-12-07": "วันหยุดชดเชยวันพ่อแห่งชาติ", "2026-12-10": "วันรัฐธรรมนูญ",
+            "2026-12-31": "วันสิ้นปี"
+        };
+
+        // ===================== HELPERS =====================
+        function todayStr() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function toRad(deg) { return deg * Math.PI / 180; }
+        function distanceMeters(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Wraps fetch with a timeout so a stuck/hanging network request can never
+        // freeze the admin UI forever (this is what previously made "delete" get stuck).
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        // ===================== SUPABASE: LEAVE =====================
+        async function sbSelect() {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/leave_requests?select=*&order=leave_date.asc`, { method: "GET", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("GET failed: " + res.status);
+            return await res.json();
+        }
+        async function sbInsert(record) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/leave_requests`, {
+                method: "POST", headers: { ...SB_HEADERS, "Prefer": "return=minimal" }, body: JSON.stringify(record)
+            });
+            if (!res.ok) { const errText = await res.text(); throw new Error("POST failed: " + res.status + " " + errText); }
+        }
+        async function updateStatus(id, newStatus) {
+            try {
+                const res = await fetchWithTimeout(`${SB_URL}/rest/v1/leave_requests?id=eq.${id}`, {
+                    method: "PATCH", headers: { ...SB_HEADERS, "Prefer": "return=minimal" }, body: JSON.stringify({ status: newStatus })
+                });
+                if (!res.ok) throw new Error("PATCH failed: " + res.status);
+                const icon = newStatus === 'Approved' ? '✓' : '✗';
+                const label = newStatus === 'Approved' ? 'อนุมัติเรียบร้อยแล้ว' : 'ปฏิเสธคำขอแล้ว';
+                triggerToast(`${icon} ${label}`, newStatus === 'Approved' ? 'success' : 'danger');
+                await fetchOnlineData();
+                renderAdminDashboard();
+                renderCalendar();
+            } catch (err) {
+                triggerToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "danger");
+                console.error(err);
+            }
+        }
+        async function deleteLeaveRecord(id, btnEl) {
+            if (!confirm("ยืนยันลบรายการคำขอลานี้หรือไม่?")) return;
+            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+            try {
+                const res = await fetchWithTimeout(`${SB_URL}/rest/v1/leave_requests?id=eq.${id}`, { method: "DELETE", headers: SB_HEADERS }, 8000);
+                if (!res.ok) throw new Error("DELETE failed: " + res.status);
+                triggerToast("ลบรายการเรียบร้อยแล้ว", "success");
+                await fetchOnlineData(); renderAdminDashboard(); renderCalendar();
+            } catch (err) {
+                console.error(err);
+                // Server call is stuck/failed: drop it from the local list right away so
+                // the admin table never stays "frozen" on a broken record.
+                onlineDatabaseRecords = onlineDatabaseRecords.filter(r => r.id !== id);
+                renderAdminDashboard(); renderCalendar();
+                const msg = err.name === 'AbortError'
+                    ? "เชื่อมต่อช้า/ค้าง: ได้ลบออกจากหน้าจอแล้ว กด 'รีเฟรช' เพื่อตรวจสอบผลจริงอีกครั้ง"
+                    : "ลบรายการไม่สำเร็จทางฐานข้อมูล แต่ได้ซ่อนออกจากหน้าจอแล้ว กด 'รีเฟรช' เพื่อตรวจสอบ";
+                triggerToast(msg, "warning");
+            }
+        }
+        async function clearAllLeaveRecords() {
+            if (onlineDatabaseRecords.length === 0) { triggerToast("ไม่มีข้อมูลให้ลบ", "warning"); return; }
+            if (!confirm(`ยืนยันลบข้อมูลคำขอลาทั้งหมด ${onlineDatabaseRecords.length} รายการ? การกระทำนี้ไม่สามารถย้อนกลับได้`)) return;
+            const ids = onlineDatabaseRecords.map(r => r.id);
+            triggerToast("กำลังลบข้อมูลทั้งหมด...", "warning");
+            for (const id of ids) {
+                try {
+                    await fetchWithTimeout(`${SB_URL}/rest/v1/leave_requests?id=eq.${id}`, { method: "DELETE", headers: SB_HEADERS }, 8000);
+                } catch (err) { console.warn("clear leave item failed", id, err); }
+            }
+            onlineDatabaseRecords = [];
+            renderAdminDashboard(); renderCalendar();
+            triggerToast("ล้างข้อมูลคำขอลาทั้งหมดแล้ว", "success");
+        }
+
+        // ===================== SUPABASE: ATTENDANCE =====================
+        // NOTE: requires a Supabase table named "attendance_checkins" with columns:
+        // id (bigint identity, PK), courier_id (text), emp_name (text), vendor (text),
+        // checkin_date (date), checkin_time (text), late_minutes (int), status (text),
+        // distance_m (numeric), uniform_ok (bool), ktb_bag_ok (bool), created_at (timestamptz default now())
+        //
+        // If your table was created before this update, run:
+        //   ALTER TABLE attendance_checkins ADD COLUMN uniform_ok boolean DEFAULT false;
+        //   ALTER TABLE attendance_checkins ADD COLUMN ktb_bag_ok boolean DEFAULT false;
+        async function sbSelectAttendance() {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/attendance_checkins?select=*&order=checkin_date.desc,checkin_time.desc`, { method: "GET", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("GET failed: " + res.status);
+            return await res.json();
+        }
+        async function sbInsertAttendance(record) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/attendance_checkins`, {
+                method: "POST", headers: { ...SB_HEADERS, "Prefer": "return=minimal" }, body: JSON.stringify(record)
+            });
+            if (!res.ok) { const errText = await res.text(); throw new Error("POST failed: " + res.status + " " + errText); }
+        }
+        async function deleteAttendanceRecord(id, btnEl) {
+            if (!confirm("ยืนยันลบรายการเช็คอินนี้หรือไม่?")) return;
+            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+            try {
+                const res = await fetchWithTimeout(`${SB_URL}/rest/v1/attendance_checkins?id=eq.${id}`, { method: "DELETE", headers: SB_HEADERS }, 8000);
+                if (!res.ok) throw new Error("DELETE failed: " + res.status);
+                triggerToast("ลบรายการเรียบร้อยแล้ว", "success");
+                await fetchAttendanceData(); renderAttendanceDashboard();
+            } catch (err) {
+                console.error(err);
+                attendanceRecords = attendanceRecords.filter(r => r.id !== id);
+                renderAttendanceDashboard();
+                const msg = err.name === 'AbortError'
+                    ? "เชื่อมต่อช้า/ค้าง: ได้ลบออกจากหน้าจอแล้ว กด 'รีเฟรช' เพื่อตรวจสอบผลจริงอีกครั้ง"
+                    : "ลบรายการไม่สำเร็จทางฐานข้อมูล แต่ได้ซ่อนออกจากหน้าจอแล้ว กด 'รีเฟรช' เพื่อตรวจสอบ";
+                triggerToast(msg, "warning");
+            }
+        }
+        async function clearAllAttendanceRecords() {
+            if (attendanceRecords.length === 0) { triggerToast("ไม่มีข้อมูลให้ลบ", "warning"); return; }
+            if (!confirm(`ยืนยันลบข้อมูลเช็คอินทั้งหมด ${attendanceRecords.length} รายการ? การกระทำนี้ไม่สามารถย้อนกลับได้`)) return;
+            const ids = attendanceRecords.map(r => r.id);
+            triggerToast("กำลังลบข้อมูลทั้งหมด...", "warning");
+            for (const id of ids) {
+                try {
+                    await fetchWithTimeout(`${SB_URL}/rest/v1/attendance_checkins?id=eq.${id}`, { method: "DELETE", headers: SB_HEADERS }, 8000);
+                } catch (err) { console.warn("clear attendance item failed", id, err); }
+            }
+            attendanceRecords = [];
+            renderAttendanceDashboard();
+            triggerToast("ล้างข้อมูลเช็คอินทั้งหมดแล้ว", "success");
+        }
+
+        async function fetchOnlineData() {
+            try { onlineDatabaseRecords = await sbSelect(); } catch (err) { console.warn("fetchOnlineData error:", err); onlineDatabaseRecords = []; }
+        }
+        async function fetchAttendanceData() {
+            try { attendanceRecords = await sbSelectAttendance(); } catch (err) { console.warn("fetchAttendanceData error:", err); attendanceRecords = []; }
+        }
+
+        // ===================== PROMO / MODE =====================
+        function checkIsInPromoRange(targetDateStr) {
+            const tokens = targetDateStr.split('-');
+            const year = parseInt(tokens[0]);
+            const month = parseInt(tokens[1]);
+            let startDate = new Date(year, month - 1, month);
+            let activeDaysCount = 0;
+            let currentDate = new Date(startDate);
+            let campaignDates = [];
+            while (activeDaysCount < 7) {
+                let dow = currentDate.getDay();
+                campaignDates.push(new Date(currentDate).setHours(0,0,0,0));
+                if (dow !== 0) activeDaysCount++;
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            return campaignDates.includes(new Date(targetDateStr).setHours(0,0,0,0));
+        }
+
+        function showWarnPopup(type) {
+            return new Promise((resolve) => {
+                warnResolve = resolve;
+                const modal = document.getElementById('warnModal');
+                const highlight = document.getElementById('warnHighlight');
+                const detail = document.getElementById('warnDetail');
+                const title = document.getElementById('warnModalTitle');
+                if (type === 'promo') {
+                    title.textContent = 'กฎเหล็กช่วงแคมเปญโปรโมชั่น';
+                    highlight.innerHTML = 'วันนี้อยู่ในช่วงแคมเปญใหญ่ Double Date ประจำเดือน<br>การลาในช่วงนี้ต้องได้รับการอนุมัติจากหัวหน้างานเท่านั้น';
+                    detail.innerHTML = `<p style="margin-bottom:8px;">คำขอของคุณจะถูกบันทึกเป็น <b style="color:var(--warning)">สถานะ Pending</b> รอหัวหน้างานพิจารณา</p><p style="font-size:11px;color:var(--dhl-grey);">คุณยืนยันต้องการยื่นคำขอลานี้หรือไม่?</p>`;
+                } else {
+                    title.textContent = 'กฎเหล็กกลางสัปดาห์ (อ.-พฤ.)';
+                    highlight.innerHTML = 'วันอังคาร - พฤหัสบดี เป็นช่วงพัสดุหนาแน่นสูงสุด<br>การลาต้องได้รับการอนุมัติจากหัวหน้างาน';
+                    detail.innerHTML = `<p style="margin-bottom:8px;">คำขอของคุณจะถูกบันทึกเป็น <b style="color:var(--warning)">สถานะ Pending</b> รอหัวหน้างานพิจารณา</p><p style="font-size:11px;color:var(--dhl-grey);">คุณยืนยันต้องการยื่นคำขอลานี้หรือไม่?</p>`;
+                }
+                modal.classList.add('show');
+            });
+        }
+        function closeWarnModal(confirmed) {
+            document.getElementById('warnModal').classList.remove('show');
+            if (warnResolve) { warnResolve(confirmed); warnResolve = null; }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            document.getElementById("monthSelect").value = new Date().getMonth();
+            document.getElementById("filterDate").value = todayStr();
+            startLiveClock();
+            await switchMode('checkin');
+        });
+
+        function tryAccessAdmin() {
+            document.getElementById("pinCodeField").value = "";
+            document.getElementById("pinModal").classList.add("show");
+            setTimeout(() => { document.getElementById("pinCodeField").focus(); }, 300);
+        }
+        function closePinModal() { document.getElementById("pinModal").classList.remove("show"); }
+        function verifyAdminPin() {
+            const inputPin = document.getElementById("pinCodeField").value;
+            if (inputPin === ADMIN_PIN_SECRET) {
+                closePinModal();
+                triggerToast("ยินดีต้อนรับผู้ดูแลระบบ", "success");
+                switchMode('admin');
+            } else {
+                triggerToast("รหัสผ่านไม่ถูกต้อง เฉพาะหัวหน้างานเท่านั้น!", "danger");
+                document.getElementById("pinCodeField").value = "";
+            }
+        }
+
+        async function switchMode(mode) {
+            document.getElementById('btnUserMode').classList.toggle('active', mode === 'user');
+            document.getElementById('btnCheckinMode').classList.toggle('active', mode === 'checkin');
+            document.getElementById('btnAdminMode').classList.toggle('active', mode === 'admin');
+
+            const titleEl = document.getElementById('headerTitleText');
+            if (titleEl) {
+                if (mode === 'admin') titleEl.textContent = 'แดชบอร์ดผู้ดูแล (Admin Dashboard)';
+                else if (mode === 'user') titleEl.textContent = 'ยื่นคำขอลางาน (Leave Request)';
+                else titleEl.textContent = 'เช็คอินเข้างาน (Smart Check-in)';
+            }
+
+            document.getElementById('leaveModuleSection').style.display = mode === 'user' ? 'flex' : 'none';
+            document.getElementById('leaveModuleSection').style.flexDirection = 'column';
+            document.getElementById('leaveModuleSection').style.gap = '12px';
+            document.getElementById('checkinModuleSection').style.display = mode === 'checkin' ? 'flex' : 'none';
+            document.getElementById('checkinModuleSection').style.flexDirection = 'column';
+            document.getElementById('checkinModuleSection').style.gap = '12px';
+            document.getElementById('adminSection').style.display = mode === 'admin' ? 'flex' : 'none';
+
+            if (mode === 'user') { await fetchOnlineData(); renderCalendar(); }
+            if (mode === 'checkin') { resetCheckinFlow(); }
+            if (mode === 'admin') {
+                await fetchOnlineData();
+                await fetchAttendanceData();
+                renderAdminDashboard();
+                renderAttendanceDashboard();
+            }
+        }
+
+        function switchAdminTab(tab) {
+            document.getElementById('tabBtnLeave').classList.toggle('active', tab === 'leave');
+            document.getElementById('tabBtnAttendance').classList.toggle('active', tab === 'attendance');
+            document.getElementById('adminCardLeave').classList.toggle('show', tab === 'leave');
+            document.getElementById('adminCardAttendance').classList.toggle('show', tab === 'attendance');
+        }
+
+        // ===================== LIVE CLOCK =====================
+        function startLiveClock() {
+            function tick() {
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2,'0');
+                const mm = String(now.getMinutes()).padStart(2,'0');
+                const ss = String(now.getSeconds()).padStart(2,'0');
+                const clockEl = document.getElementById('liveClock');
+                const dateEl = document.getElementById('liveDateLabel');
+                if (clockEl) clockEl.textContent = `${hh}:${mm}:${ss}`;
+                if (dateEl) {
+                    const thDays = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+                    dateEl.textContent = `วัน${thDays[now.getDay()]}ที่ ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+                }
+            }
+            tick(); setInterval(tick, 1000);
+        }
+
+        // ===================== CALENDAR (LEAVE) =====================
+        function renderCalendar() {
+            const gridBox = document.getElementById("gridBox");
+            if (!gridBox) return;
+            gridBox.innerHTML = '';
+            ['อา','จ','อ','พ','พฤ','ศ','ส'].forEach(w => {
+                const div = document.createElement('div'); div.className = 'day-name'; div.innerText = w; gridBox.appendChild(div);
+            });
+            const year = 2026;
+            const month = parseInt(document.getElementById("monthSelect").value);
+            let firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDayIndex; i++) {
+                const e = document.createElement('div'); e.className = 'day-cell empty-day'; gridBox.appendChild(e);
+            }
+            const tStr = todayStr();
+            for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
+                const cellDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+                const dayOfWeek = new Date(year, month, dayNum).getDay();
+                const cell = document.createElement('div'); cell.className = 'day-cell'; cell.setAttribute('data-date', cellDateStr);
+                const numSpan = document.createElement('span'); numSpan.className = 'day-num'; numSpan.innerText = dayNum; cell.appendChild(numSpan);
+                let holidayName = publicHolidays2026[cellDateStr];
+                let isPromoPeriod = checkIsInPromoRange(cellDateStr);
+                let isMidWeekLock = (dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4);
+                const isExpired = cellDateStr < tStr;
+                // Auto-hide approved bookings once the leave date has passed
+                let approvedUser = !isExpired ? onlineDatabaseRecords.find(d => d.leave_date === cellDateStr && d.status === "Approved") : null;
+                if (approvedUser) {
+                    cell.classList.add('booked-day');
+                    cell.setAttribute('title', `เต็มแล้ว: ${approvedUser.emp_id} (${approvedUser.emp_name})`);
+                    cell.innerHTML += `<span class="cell-badge bg-booked">เต็มแล้ว</span><span class="cell-badge bg-booked-id">${approvedUser.emp_id}</span>`;
+                } else if (holidayName) {
+                    cell.classList.add('holiday-day'); cell.setAttribute('data-type','holiday'); cell.setAttribute('data-info', holidayName);
+                    cell.innerHTML += `<span class="cell-badge bg-holiday">วันหยุด</span>`;
+                } else if (isPromoPeriod && isMidWeekLock) {
+                    cell.classList.add('promo-day'); cell.setAttribute('data-type','promo-lock');
+                    cell.innerHTML += `<span class="cell-badge bg-promo">โปรโม+อ.-พฤ.</span>`;
+                } else if (isPromoPeriod) {
+                    cell.classList.add('promo-day'); cell.setAttribute('data-type','promo');
+                    cell.innerHTML += `<span class="cell-badge bg-promo">แคมเปญ</span>`;
+                } else if (isMidWeekLock) {
+                    cell.classList.add('lock-day'); cell.setAttribute('data-type','lock');
+                    cell.innerHTML += `<span class="cell-badge bg-lock">ต้องอนุมัติ</span>`;
+                }
+                if (selectedDates.includes(cellDateStr)) cell.classList.add('selected-day');
+                if (isExpired) { cell.style.opacity = '0.55'; }
+                cell.addEventListener('click', async () => {
+                    const infoBox = document.getElementById("detailInfoBox");
+                    if (isExpired) {
+                        triggerToast("วันที่นี้ผ่านไปแล้ว ไม่สามารถเลือกได้", "warning"); return;
+                    }
+                    if (holidayName) {
+                        infoBox.innerHTML = `วันหยุด: <b>วันที่ ${dayNum} คือ:</b> ${holidayName}`;
+                        infoBox.style.display = "block"; infoBox.style.borderLeftColor = "var(--dhl-yellow)";
+                        triggerToast(`เป็น${holidayName} คุณได้สิทธิ์หยุดอยู่แล้วครับ`, "warning"); return;
+                    }
+                    if (approvedUser) {
+                        infoBox.innerHTML = `<b>เต็มแล้ว:</b> รหัสพนักงาน <b>${approvedUser.emp_id}</b> (${approvedUser.emp_name}) ได้รับสิทธิ์อนุมัติวันนี้แล้ว`;
+                        infoBox.style.display = "block"; infoBox.style.borderLeftColor = "var(--dhl-grey)";
+                        triggerToast(`วันนี้เต็มแล้ว (${approvedUser.emp_id} - ${approvedUser.emp_name} ได้รับสิทธิ์อนุมัติแล้ว)`, "danger"); return;
+                    }
+                    const cellType = cell.getAttribute('data-type');
+                    if (cellType === 'lock' || cellType === 'promo-lock') {
+                        infoBox.innerHTML = `<b>ต้องได้รับอนุมัติ:</b> วันอังคาร พุธ พฤหัสบดี ต้องผ่านหัวหน้างานก่อนเท่านั้น`;
+                        infoBox.style.display = "block"; infoBox.style.borderLeftColor = "var(--dhl-red)";
+                    } else if (cellType === 'promo') {
+                        infoBox.innerHTML = `<b>ช่วงแคมเปญ Double Date:</b> ต้องได้รับการอนุมัติจากหัวหน้างาน`;
+                        infoBox.style.display = "block"; infoBox.style.borderLeftColor = "var(--warning)";
+                    } else {
+                        infoBox.style.display = "none";
+                    }
+                    if (isMidWeekLock || isPromoPeriod) {
+                        const confirmed = await showWarnPopup(isPromoPeriod ? 'promo' : 'lock');
+                        if (!confirmed) return;
+                    }
+                    if (selectedDates.includes(cellDateStr)) {
+                        selectedDates = selectedDates.filter(d => d !== cellDateStr);
+                    } else {
+                        selectedDates.push(cellDateStr);
+                    }
+                    renderCalendar(); updateChipsUI();
+                });
+                gridBox.appendChild(cell);
+            }
+        }
+
+        function updateChipsUI() {
+            const box = document.getElementById("chipsBox"); box.innerHTML = '';
+            if (selectedDates.length === 0) {
+                box.innerHTML = '<span style="color:var(--dhl-grey);font-size:11px;">กรุณาคลิกเลือกวันที่ว่างบนปฏิทิน...</span>'; return;
+            }
+            selectedDates.sort().forEach(d => {
+                const s = d.split('-');
+                const chip = document.createElement('div'); chip.className = 'chip';
+                chip.innerHTML = `<span>${s[2]}/${s[1]}</span> <i class="fa-solid fa-circle-xmark" onclick="removeDateChip('${d}')"></i>`;
+                box.appendChild(chip);
+            });
+        }
+        function removeDateChip(d) { selectedDates = selectedDates.filter(date => date !== d); renderCalendar(); updateChipsUI(); }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (selectedDates.length === 0) { triggerToast("กรุณาเลือกวันขอลางานบนปฏิทิน", "danger"); return; }
+            const name = document.getElementById("inputName").value.trim();
+            const empId = document.getElementById("inputId").value.trim();
+            const reason = document.getElementById("inputReason").value.trim();
+            if (name.includes(" ")) { triggerToast("โปรดระบุเฉพาะชื่อเล่นหรือชื่อจริง (ไม่ต้องใส่นามสกุล)", "warning"); return; }
+            try {
+                for (let date of selectedDates) {
+                    await sbInsert({ emp_id: empId, emp_name: name, leave_date: date, reason: reason, status: 'Pending' });
+                }
+                triggerToast(`ส่งข้อมูลการลาของคุณ ${name} สำเร็จแล้ว`, "success");
+                document.getElementById("requestForm").reset();
+                selectedDates = []; updateChipsUI();
+                await fetchOnlineData(); renderCalendar();
+            } catch (err) {
+                triggerToast("เกิดข้อผิดพลาดทางเทคนิค กรุณาลองใหม่อีกครั้ง", "danger");
+            }
+        }
+
+        // ===================== CHECK-IN FLOW =====================
+        function resetCheckinFlow() {
+            currentCourier = null; currentDistance = null; locationOk = false;
+            currentKtbBagStatus = null;
+            document.getElementById('checkinCourierId').value = '';
+            document.getElementById('courierProfileCard').classList.remove('show');
+            const locBadgeReset = document.getElementById('locBadge');
+            if (locBadgeReset) locBadgeReset.style.display = 'none';
+            const locBox = document.getElementById('locationStatusBox');
+            locBox.classList.remove('show','ok','fail','pending');
+            document.getElementById('cameraStepBox').style.display = 'none';
+            document.getElementById('cameraWrap').classList.remove('show');
+            document.getElementById('openCameraBtn').style.display = 'inline-block';
+            const captureBtn = document.getElementById('captureBtn');
+            captureBtn.style.display = 'none';
+            captureBtn.disabled = true;
+            document.getElementById('chkUniform').checked = false;
+            resetKtbToggleUI();
+            document.getElementById('successCheckinBox').classList.remove('show','late');
+            stopCamera();
+        }
+
+        function resetKtbToggleUI() {
+            currentKtbBagStatus = null;
+            const hasBtn = document.getElementById('btnKtbHas');
+            const noneBtn = document.getElementById('btnKtbNone');
+            if (hasBtn) hasBtn.classList.remove('has-selected');
+            if (noneBtn) noneBtn.classList.remove('none-selected');
+        }
+
+        // Called when the courier taps "มี" or "ไม่มี" for the KTB bag.
+        // Both answers are valid — "ไม่มี" does not block check-in, it just
+        // gets recorded as-is so it shows up in the attendance report.
+        function selectKtbBag(hasIt) {
+            currentKtbBagStatus = hasIt;
+            const hasBtn = document.getElementById('btnKtbHas');
+            const noneBtn = document.getElementById('btnKtbNone');
+            hasBtn.classList.toggle('has-selected', hasIt === true);
+            noneBtn.classList.toggle('none-selected', hasIt === false);
+            updateChecklistState();
+        }
+
+        // Enables the capture button only once the uniform is ticked AND
+        // the courier has explicitly answered มี/ไม่มี for the KTB bag.
+        function updateChecklistState() {
+            const captureBtn = document.getElementById('captureBtn');
+            if (!captureBtn) return;
+            const uniformOk = document.getElementById('chkUniform').checked;
+            const ktbAnswered = (currentKtbBagStatus === true || currentKtbBagStatus === false);
+            captureBtn.disabled = !(uniformOk && ktbAnswered);
+        }
+
+        function lookupCourierId() {
+            const raw = document.getElementById('checkinCourierId').value.trim().toUpperCase();
+            if (!raw) { triggerToast("กรุณากรอก Courier ID", "danger"); return; }
+            const found = COURIER_LIST.find(c => c.id.toUpperCase() === raw);
+            if (!found) {
+                document.getElementById('courierProfileCard').classList.remove('show');
+                document.getElementById('cameraStepBox').style.display = 'none';
+                triggerToast("ไม่พบ Courier ID นี้ในระบบ กรุณาตรวจสอบอีกครั้ง", "danger");
+                return;
+            }
+            currentCourier = found;
+            document.getElementById('courierAvatarInit').textContent = found.name.charAt(0).toUpperCase();
+            document.getElementById('courierProfileName').textContent = found.name;
+            document.getElementById('courierProfileVendor').textContent = found.vendor + ' · ' + found.id;
+            document.getElementById('courierProfileCard').classList.add('show');
+            const locBadge = document.getElementById('locBadge');
+            locBadge.style.display = 'inline-flex';
+            locBadge.className = 'loc-badge pending';
+            document.getElementById('locBadgeText').textContent = 'กำลังตรวจสอบ';
+
+            // Check if already checked in today
+            const alreadyToday = attendanceRecords.find(r => r.courier_id === found.id && r.checkin_date === todayStr());
+            if (alreadyToday) {
+                triggerToast(`คุณเช็คอินวันนี้ไปแล้วเวลา ${alreadyToday.checkin_time}`, "warning");
+                document.getElementById('cameraStepBox').style.display = 'none';
+                return;
+            }
+            verifyLocation();
+        }
+
+        function verifyLocation() {
+            const locBox = document.getElementById('locationStatusBox');
+            const locText = document.getElementById('locationStatusText');
+            locBox.classList.remove('ok','fail'); locBox.classList.add('show','pending');
+            locText.textContent = 'กำลังตรวจสอบตำแหน่งที่ตั้ง...';
+            document.getElementById('cameraStepBox').style.display = 'none';
+
+            if (!navigator.geolocation) {
+                locBox.classList.remove('pending'); locBox.classList.add('fail');
+                locText.textContent = 'อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง';
+                locationOk = false; return;
+            }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const dist = distanceMeters(pos.coords.latitude, pos.coords.longitude, CHECKIN_LAT, CHECKIN_LNG);
+                currentDistance = Math.round(dist);
+                locBox.classList.remove('pending');
+                const locBadge = document.getElementById('locBadge');
+                const locBadgeText = document.getElementById('locBadgeText');
+                if (dist <= CHECKIN_RADIUS_M) {
+                    locBox.classList.add('ok');
+                    locText.textContent = `อยู่ในพื้นที่ที่กำหนด สามารถเช็คอินได้ (ห่างจากจุดเช็คอิน ${currentDistance} ม.)`;
+                    locationOk = true;
+                    locBadge.className = 'loc-badge ok';
+                    locBadgeText.textContent = 'ในพื้นที่';
+                    document.getElementById('cameraStepBox').style.display = 'block';
+                    // Reset checklist + capture button state fresh for this session
+                    document.getElementById('chkUniform').checked = false;
+                    resetKtbToggleUI();
+                    updateChecklistState();
+                } else {
+                    locBox.classList.add('fail');
+                    locText.textContent = `อยู่นอกพื้นที่ที่กำหนด ไม่สามารถเช็คอินได้ (ห่างจากจุดเช็คอิน ${currentDistance} ม. เกินรัศมี ${CHECKIN_RADIUS_M} ม.)`;
+                    locationOk = false;
+                    locBadge.className = 'loc-badge fail';
+                    locBadgeText.textContent = 'นอกพื้นที่';
+                    document.getElementById('cameraStepBox').style.display = 'none';
+                }
+            }, (err) => {
+                locBox.classList.remove('pending'); locBox.classList.add('fail');
+                locText.textContent = 'ไม่สามารถเข้าถึงตำแหน่งที่ตั้งได้ กรุณาอนุญาตการใช้งาน Location แล้วลองใหม่';
+                locationOk = false;
+                const locBadge = document.getElementById('locBadge');
+                locBadge.className = 'loc-badge fail';
+                document.getElementById('locBadgeText').textContent = 'ไม่พบตำแหน่ง';
+                console.warn(err);
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        }
+
+        async function openCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                const video = document.getElementById('cameraVideo');
+                video.srcObject = cameraStream;
+                document.getElementById('cameraWrap').classList.add('show');
+                document.getElementById('openCameraBtn').style.display = 'none';
+                document.getElementById('captureBtn').style.display = 'block';
+                updateChecklistState();
+            } catch (err) {
+                triggerToast("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้งานกล้อง", "danger");
+                console.warn(err);
+            }
+        }
+        function stopCamera() {
+            if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+        }
+
+        async function captureAndCheckin() {
+            if (!currentCourier || !locationOk) { triggerToast("กรุณาตรวจสอบ Courier ID และตำแหน่งก่อน", "danger"); return; }
+            const uniformOk = document.getElementById('chkUniform').checked;
+            const ktbAnswered = (currentKtbBagStatus === true || currentKtbBagStatus === false);
+            if (!uniformOk || !ktbAnswered) {
+                triggerToast("กรุณาติ๊กยืนยันการแต่งกาย (ยูนิฟอร์ม) และเลือกสถานะกระเป๋า KTB (มี/ไม่มี) ก่อนเช็คอิน", "danger");
+                return;
+            }
+            const ktbOk = currentKtbBagStatus === true;
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            canvas.width = video.videoWidth || 320; canvas.height = video.videoHeight || 240;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const now = new Date();
+            const checkinTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            const startTotalMin = WORK_START_HOUR * 60 + WORK_START_MIN;
+            const nowTotalMin = now.getHours() * 60 + now.getMinutes();
+            const lateMinutes = Math.max(0, nowTotalMin - startTotalMin);
+            const status = lateMinutes > 0 ? 'Late' : 'On time';
+
+            try {
+                await sbInsertAttendance({
+                    courier_id: currentCourier.id,
+                    emp_name: currentCourier.name,
+                    vendor: currentCourier.vendor,
+                    checkin_date: todayStr(),
+                    checkin_time: checkinTimeStr,
+                    late_minutes: lateMinutes,
+                    status: status,
+                    distance_m: currentDistance,
+                    uniform_ok: uniformOk,
+                    ktb_bag_ok: ktbOk
+                });
+                stopCamera();
+                document.getElementById('cameraStepBox').style.display = 'none';
+                const successBox = document.getElementById('successCheckinBox');
+                successBox.classList.remove('late');
+                document.getElementById('successCheckinName').textContent = `${currentCourier.name} · ${currentCourier.id}`;
+                document.getElementById('successCheckinTime').textContent = checkinTimeStr;
+                const tagEl = document.getElementById('successCheckinTag');
+                if (status === 'Late') {
+                    successBox.classList.add('late');
+                    tagEl.innerHTML = `<span class="late-tag">Late ${lateMinutes} นาที</span>`;
+                } else {
+                    tagEl.innerHTML = `<span class="ontime-tag">ตรงเวลา</span>`;
+                }
+                const ktbSummaryHtml = ktbOk
+                    ? `<span><i class="fa-solid fa-bag-shopping" style="color:var(--dhl-yellow)"></i> KTB: มี</span>`
+                    : `<span class="missing-tag"><i class="fa-solid fa-ban"></i> KTB: ไม่มี</span>`;
+                document.getElementById('successChecklistSummary').innerHTML =
+                    `<span><i class="fa-solid fa-shirt" style="color:var(--dhl-yellow)"></i> ยูนิฟอร์ม</span>
+                     ${ktbSummaryHtml}
+                     <span><i class="fa-solid fa-location-dot" style="color:var(--dhl-yellow)"></i> ${currentDistance != null ? currentDistance : '-'} ม.</span>`;
+                successBox.classList.add('show');
+                await fetchAttendanceData();
+                triggerToast("เช็คอินสำเร็จ", "success");
+            } catch (err) {
+                triggerToast("เช็คอินไม่สำเร็จ กรุณาลองใหม่ (ตรวจสอบว่าตั้งค่าตาราง attendance_checkins แล้ว)", "danger");
+                console.error(err);
+            }
+        }
+
+        // ===================== ADMIN: LEAVE DASHBOARD =====================
+        async function refreshAdminData() {
+            document.getElementById("adminTableBody").innerHTML = `<div class="empty-state-note">กำลังโหลดข้อมูลล่าสุด...</div>`;
+            await fetchOnlineData();
+            renderAdminDashboard();
+            triggerToast("โหลดข้อมูลล่าสุดแล้ว", "success");
+        }
+
+        // Recomputes the two summary stat cards (pending requests overall,
+        // approved-today count) from whatever is currently loaded.
+        function updateAdminStatCards() {
+            const tStr = todayStr();
+            const pendingCount = onlineDatabaseRecords.filter(r => r.status === 'Pending').length;
+            const approvedTodayCount = onlineDatabaseRecords.filter(r => r.status === 'Approved' && r.leave_date === tStr).length;
+            const pEl = document.getElementById('statPendingCount');
+            const aEl = document.getElementById('statApprovedTodayCount');
+            if (pEl) pEl.textContent = pendingCount;
+            if (aEl) aEl.textContent = approvedTodayCount;
+        }
+
+        function renderAdminDashboard() {
+            updateAdminStatCards();
+            const listBox = document.getElementById("adminTableBody");
+            listBox.innerHTML = '';
+            const filterKeyword = document.getElementById("searchEmpId").value.trim().toLowerCase();
+            const showHistory = document.getElementById("showHistoryLeave").checked;
+            const tStr = todayStr();
+            const filteredRecords = onlineDatabaseRecords.filter(item => {
+                if (!item.emp_id.toLowerCase().includes(filterKeyword)) return false;
+                if (!showHistory && item.leave_date < tStr) return false;
+                return true;
+            });
+            if (filteredRecords.length === 0) {
+                listBox.innerHTML = `<div class="empty-state-note">ไม่พบข้อมูล</div>`;
+                return;
+            }
+            filteredRecords.forEach(item => {
+                const card = document.createElement('div');
+                const s = item.leave_date.split('-');
+                const isPending = item.status === 'Pending';
+                let statusClass = 'status-pending', cardStClass = 'st-pending';
+                if (item.status === 'Approved') { statusClass = 'status-approved'; cardStClass = 'st-approved'; }
+                else if (item.status === 'Rejected') { statusClass = 'status-rejected'; cardStClass = 'st-rejected'; }
+                card.className = `leave-card ${cardStClass}`;
+                const actionHtml = isPending
+                    ? `<div class="leave-card-actions">
+                        <button class="btn-approve" onclick="updateStatus(${item.id}, 'Approved')"><i class="fa-solid fa-check"></i> อนุมัติ</button>
+                        <button class="btn-reject" onclick="updateStatus(${item.id}, 'Rejected')"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>
+                        <button class="btn-delete-sm" onclick="deleteLeaveRecord(${item.id}, this)"><i class="fa-solid fa-trash"></i></button>
+                       </div>`
+                    : `<div class="leave-card-actions">
+                        <span class="done-label" style="flex:1;"><i class="fa-solid fa-circle-check"></i> ดำเนินการแล้ว</span>
+                        <button class="btn-delete-sm" onclick="deleteLeaveRecord(${item.id}, this)"><i class="fa-solid fa-trash"></i></button>
+                       </div>`;
+                card.innerHTML = `
+                    <div class="leave-card-top">
+                        <div>
+                            <div class="leave-card-id">${item.emp_id}</div>
+                            <div class="leave-card-name">${item.emp_name}</div>
+                        </div>
+                        <span class="status-badge ${statusClass}">${item.status}</span>
+                    </div>
+                    <div class="leave-card-meta">ลาวันที่ ${s[2]}/${s[1]} · ${item.reason || '-'}</div>
+                    ${actionHtml}
+                `;
+                listBox.appendChild(card);
+            });
+        }
+
+        function exportLeaveCsv() {
+            if (onlineDatabaseRecords.length === 0) { triggerToast("ไม่มีข้อมูลให้ดึงรายงาน", "warning"); return; }
+            let csv = "Emp ID,Emp Name,Leave Date,Reason,Status\n";
+            onlineDatabaseRecords.forEach(r => {
+                const reason = (r.reason || '').replace(/"/g,'""');
+                csv += `"${r.emp_id}","${r.emp_name}","${r.leave_date}","${reason}","${r.status}"\n`;
+            });
+            downloadCsv(csv, `leave_report_${todayStr()}.csv`);
+        }
+
+        // ===================== ADMIN: ATTENDANCE DASHBOARD =====================
+        async function refreshAttendanceData() {
+            document.getElementById("attendanceTableBody").innerHTML = `<div class="empty-state-note">กำลังโหลดข้อมูลล่าสุด...</div>`;
+            await fetchAttendanceData();
+            renderAttendanceDashboard();
+            triggerToast("โหลดข้อมูลล่าสุดแล้ว", "success");
+        }
+
+        function renderAttendanceDashboard() {
+            const listBox = document.getElementById("attendanceTableBody");
+            listBox.innerHTML = '';
+            const filterKeyword = document.getElementById("searchCourierId").value.trim().toLowerCase();
+            const filterDate = document.getElementById("filterDate").value;
+            const filteredRecords = attendanceRecords.filter(item => {
+                if (filterKeyword && !item.courier_id.toLowerCase().includes(filterKeyword)) return false;
+                if (filterDate && item.checkin_date !== filterDate) return false;
+                return true;
+            });
+            if (filteredRecords.length === 0) {
+                listBox.innerHTML = `<div class="empty-state-note">ไม่พบข้อมูล</div>`;
+                return;
+            }
+            filteredRecords.forEach(item => {
+                const card = document.createElement('div');
+                const s = item.checkin_date.split('-');
+                const isLate = item.status === 'Late';
+                card.className = `attendance-card ${isLate ? 'late' : ''}`;
+                const statusClass = isLate ? 'status-late' : 'status-ontime';
+                const statusLabel = isLate ? `Late ${item.late_minutes} นาที` : 'ตรงเวลา';
+                const uniformBadge = item.uniform_ok
+                    ? `<span class="status-badge status-ok-mini"><i class="fa-solid fa-shirt"></i> ยูนิฟอร์ม</span>`
+                    : `<span class="status-badge status-fail-mini"><i class="fa-solid fa-xmark"></i> ไม่มีข้อมูล</span>`;
+                // KTB bag is an explicit มี/ไม่มี status (not a pass/fail gate),
+                // so "ไม่มี" is shown as a neutral warning tag rather than a hard failure.
+                const ktbBadge = item.ktb_bag_ok
+                    ? `<span class="status-badge status-ok-mini"><i class="fa-solid fa-bag-shopping"></i> KTB มี</span>`
+                    : `<span class="status-badge status-warn-mini"><i class="fa-solid fa-ban"></i> KTB ไม่มี</span>`;
+                card.innerHTML = `
+                    <div class="attendance-card-avatar">${(item.emp_name || '?').charAt(0).toUpperCase()}</div>
+                    <div class="attendance-card-body">
+                        <div class="attendance-card-name">${item.emp_name} · ${item.courier_id}</div>
+                        <div class="attendance-card-meta">เข้างาน <b>${item.checkin_time}</b> · ${s[2]}/${s[1]}/${s[0]} · ${item.vendor || '-'}</div>
+                        <div class="attendance-card-tags">
+                            <span class="status-badge ${statusClass}">${statusLabel}</span>
+                            ${uniformBadge}
+                            ${ktbBadge}
+                        </div>
+                    </div>
+                    <button class="btn-delete-sm" onclick="deleteAttendanceRecord(${item.id}, this)"><i class="fa-solid fa-trash"></i></button>
+                `;
+                listBox.appendChild(card);
+            });
+        }
+
+        function exportAttendanceCsv() {
+            if (attendanceRecords.length === 0) { triggerToast("ไม่มีข้อมูลให้ดึงรายงาน", "warning"); return; }
+            let csv = "Courier ID,Emp Name,Vendor,Check-in Date,Check-in Time,Late Minutes,Uniform OK,KTB Bag,Status\n";
+            attendanceRecords.forEach(r => {
+                csv += `"${r.courier_id}","${r.emp_name}","${r.vendor||''}","${r.checkin_date}","${r.checkin_time}","${r.late_minutes}","${r.uniform_ok ? 'Yes' : 'No'}","${r.ktb_bag_ok ? 'Has' : 'None'}","${r.status}"\n`;
+            });
+            downloadCsv(csv, `attendance_report_${todayStr()}.csv`);
+        }
+
+        function downloadCsv(csvContent, filename) {
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function triggerToast(msg, type = "danger") {
+            const toast = document.getElementById("toastBar");
+            const txt = document.getElementById("toastMessage");
+            const icon = document.getElementById("toastIcon");
+            toast.className = `toast-box ${type} show`;
+            txt.innerText = msg;
+            icon.className = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation';
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+    </script>
+</body>
+</html>
